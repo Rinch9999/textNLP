@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f4f4f4;
@@ -21,58 +21,41 @@
             text-align: center;
             border-radius: 5px;
         }
-        nav {
-            margin: 1rem 0;
-            text-align: center;
+        h1 {
+            margin-top: 0;
         }
-        nav a {
-            margin: 0 1rem;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-        }
-        nav a:hover {
-            color: #666;
-        }
-        main {
+        .container {
             background-color: #fff;
             padding: 2rem;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        section {
-            margin-bottom: 2rem;
-        }
-        h2 {
-            color: #333;
-            border-bottom: 2px solid #333;
-            padding-bottom: 0.5rem;
-        }
-        code {
-            background-color: #f0f0f0;
-            padding: 0.2rem 0.4rem;
-            border-radius: 3px;
-        }
-        pre {
-            background-color: #f0f0f0;
+        .feature {
+            margin-bottom: 1.5rem;
             padding: 1rem;
+            background-color: #f9f9f9;
             border-radius: 5px;
-            overflow-x: auto;
+        }
+        .feature h3 {
+            margin-top: 0;
+        }
+        .github-link {
+            display: inline-block;
+            background-color: #333;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 3px;
+            margin-top: 1rem;
+        }
+        .github-link:hover {
+            background-color: #555;
         }
         footer {
             text-align: center;
             margin-top: 2rem;
             color: #666;
             font-size: 0.9rem;
-        }
-        .feature {
-            background-color: #f9f9f9;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-        }
-        .feature h3 {
-            margin-top: 0;
         }
     </style>
 </head>
@@ -82,122 +65,51 @@
         <p>基于机器学习的影评情感分类系统</p>
     </header>
     
-    <nav>
-        <a href="#overview">项目概述</a>
-        <a href="#features">核心功能</a>
-        <a href="#structure">项目结构</a>
-        <a href="#installation">安装步骤</a>
-        <a href="#usage">使用说明</a>
-        <a href="#tech">技术栈</a>
-        <a href="https://github.com/Rinch9999/textNLP">GitHub仓库</a>
-    </nav>
-    
-    <main>
-        <section id="overview">
-            <h2>项目概述</h2>
-            <p>本项目实现了一个基于机器学习的影评情感分析系统，能够对电影评论进行情感分类（正面/负面）。系统采用了面向对象的编程思想，结合了数据预处理、模型训练、结果可视化和用户交互界面，提供了完整的情感分析解决方案。</p>
-        </section>
+    <div class="container">
+        <h2>项目简介</h2>
+        <p>本项目实现了一个基于机器学习的影评情感分析系统，能够对电影评论进行情感分类（正面/负面）。系统采用了面向对象的编程思想，结合了数据预处理、模型训练、结果可视化和用户交互界面，提供了完整的情感分析解决方案。</p>
         
-        <section id="features">
-            <h2>核心功能</h2>
-            <div class="feature">
-                <h3>数据处理</h3>
-                <p>支持数据清洗、缺失值处理、文本分词和特征提取</p>
-            </div>
-            <div class="feature">
-                <h3>模型构建</h3>
-                <p>实现了逻辑回归和随机森林两种分类算法</p>
-            </div>
-            <div class="feature">
-                <h3>超参数调优</h3>
-                <p>支持网格搜索和随机搜索进行模型调优</p>
-            </div>
-            <div class="feature">
-                <h3>模型比较</h3>
-                <p>实现了不同模型的性能对比分析</p>
-            </div>
-            <div class="feature">
-                <h3>模型评估</h3>
-                <p>提供了丰富的评估指标和可视化图表</p>
-            </div>
-            <div class="feature">
-                <h3>用户界面</h3>
-                <p>基于Streamlit实现了友好的Web交互界面</p>
-            </div>
-        </section>
-        
-        <section id="structure">
-            <h2>项目结构</h2>
-            <pre><code>e:\2025-9-周琪-python实验报告+试题+课设\20232031328-苏然--课设-文本预测\文本预测-源代码/
-├── 20260107_110204_results/          # 实验结果和可视化图表目录
-├── NLP/                              # 主要源代码目录
-│   ├── Project_Name/
-│   │   └── README.md
-│   ├── src/                          # 核心源代码文件
-│   │   ├── preprocess.py             # 数据预处理模块
-│   │   ├── model.py                  # 模型结构定义
-│   │   ├── train.py                  # 单模型训练脚本
-│   │   ├── train_comparison.py       # 多模型比较训练脚本
-│   │   ├── visualization.py          # 结果可视化模块
-│   │   └── gui.py                    # 界面程序
-│   ├── .gitignore
-│   ├── README.md                     # 项目说明文档
-│   ├── requirements.txt              # 依赖库列表
-│   ├── temp_merged_data.csv          # 临时合并数据
-│   ├── test_reviews.csv              # 测试评论数据
-│   └── training_comparison_report.txt # 训练比较报告
-└── models/                           # 训练好的模型文件
-    ├── best_logistic_regression.pkl  # 调优后逻辑回归模型
-    ├── logistic_regression.pkl       # 逻辑回归模型
-    ├── processed_data.npz            # 处理后的数据和向量izer
-    └── random_forest.pkl             # 随机森林模型</code></pre>
-        </section>
-        
-        <section id="installation">
-            <h2>安装步骤</h2>
-            <ol>
-                <li>
-                    <strong>进入项目目录</strong>
-                    <pre><code>cd e:\2025-9-周琪-python实验报告+试题+课设\20232031328-苏然--课设-文本预测\文本预测-源代码\NLP</code></pre>
-                </li>
-                <li>
-                    <strong>安装依赖</strong>
-                    <pre><code>pip install -r requirements.txt</code></pre>
-                </li>
-            </ol>
-        </section>
-        
-        <section id="usage">
-            <h2>使用说明</h2>
-            <h3>1. 单模型训练</h3>
-            <pre><code>cd src
-python train.py</code></pre>
-            
-            <h3>2. 多模型比较训练</h3>
-            <pre><code>cd src
-python train_comparison.py</code></pre>
-            
-            <h3>3. 启动Web界面</h3>
-            <pre><code>python -m streamlit run src/gui.py</code></pre>
-            
-            <h3>4. 访问系统</h3>
-            <p>打开浏览器，访问 <code>http://localhost:8501</code></p>
-        </section>
-        
-        <section id="tech">
-            <h2>技术栈</h2>
+        <div class="feature">
+            <h3>核心功能</h3>
             <ul>
-                <li><strong>编程语言</strong>: Python 3.8+</li>
-                <li><strong>数据处理</strong>: pandas, numpy, jieba, nltk</li>
-                <li><strong>机器学习</strong>: scikit-learn</li>
-                <li><strong>可视化</strong>: matplotlib, seaborn, wordcloud</li>
-                <li><strong>Web框架</strong>: Streamlit</li>
+                <li>数据处理：支持数据清洗、缺失值处理、文本分词和特征提取</li>
+                <li>模型构建：实现了逻辑回归和随机森林两种分类算法</li>
+                <li>超参数调优：支持网格搜索和随机搜索进行模型调优</li>
+                <li>模型比较：实现了不同模型的性能对比分析</li>
+                <li>模型评估：提供了丰富的评估指标和可视化图表</li>
+                <li>用户界面：基于Streamlit实现了友好的Web交互界面</li>
             </ul>
-        </section>
-    </main>
+        </div>
+        
+        <div class="feature">
+            <h3>技术栈</h3>
+            <ul>
+                <li>编程语言: Python 3.8+</li>
+                <li>数据处理: pandas, numpy, jieba, nltk</li>
+                <li>机器学习: scikit-learn</li>
+                <li>可视化: matplotlib, seaborn, wordcloud</li>
+                <li>Web框架: Streamlit</li>
+            </ul>
+        </div>
+        
+        <div class="feature">
+            <h3>如何使用</h3>
+            <ol>
+                <li>克隆仓库：<code>git clone https://github.com/Rinch9999/textNLP.git</code></li>
+                <li>安装依赖：<code>pip install -r requirements.txt</code></li>
+                <li>训练模型：<code>python src/train.py</code></li>
+                <li>启动Web界面：<code>python -m streamlit run src/gui.py</code></li>
+                <li>访问系统：<code>http://localhost:8501</code></li>
+            </ol>
+        </div>
+        
+        <a href="https://github.com/Rinch9999/textNLP" class="github-link" target="_blank">
+            查看GitHub仓库
+        </a>
+    </div>
     
     <footer>
-        <p>&copy; 2026 影评情感分析系统 | <a href="https://github.com/Rinch9999/textNLP">GitHub仓库</a></p>
+        <p>&copy; 2026 影评情感分析系统 | <a href="https://github.com/Rinch9999/textNLP">GitHub</a></p>
     </footer>
 </body>
 </html>
