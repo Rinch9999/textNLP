@@ -79,7 +79,19 @@ class DataProcessor:
         elif isinstance(self.data_path, str):
             # 从单个文件加载
             if self.data_path.endswith('.csv'):
-                self.data = pd.read_csv(self.data_path, encoding=encoding)
+                # 读取CSV文件，不使用第一行作为标题
+                df = pd.read_csv(self.data_path, encoding=encoding, header=None)
+                # 根据列数设置列名
+                if df.shape[1] == 2:
+                    df.columns = ['text', 'label']
+                elif df.shape[1] == 1:
+                    df.columns = ['text']
+                    df['label'] = 0  # 默认标签为0
+                else:
+                    # 如果有更多列，取第一列为text，最后一列为label
+                    df.columns = ['text'] + [f'col{i}' for i in range(1, df.shape[1]-1)] + ['label']
+                    df = df[['text', 'label']]  # 只保留text和label列
+                self.data = df
             elif self.data_path.endswith('.xlsx'):
                 self.data = pd.read_excel(self.data_path)
             else:
@@ -200,9 +212,41 @@ class DataProcessor:
         y = self.data['label'].values
         
         # 划分训练集和测试集
+        # 计算样本数量
+        n_samples = X.shape[0]
+        n_classes = len(np.unique(y))
+        
+        # 计算预期的测试集样本数
+        expected_test_samples = int(round(test_size * n_samples))
+        
+        # 确定是否可以使用stratify参数
+        # 需要确保：
+        # 1. 每个类别在测试集中至少有一个样本
+        # 2. 测试集样本数大于等于类别数
+        can_use_stratify = expected_test_samples >= n_classes
+        
+        # 如果不能使用stratify，调整测试集大小或禁用stratify
+        if not can_use_stratify:
+            print(f"无法使用stratify参数，因为测试集样本数({expected_test_samples})小于类别数({n_classes})")
+            use_stratify = False
+        else:
+            # 检查每个类别在测试集中是否至少有一个样本
+            min_samples_per_class = np.min(np.bincount(y))
+            max_test_size = min_samples_per_class / n_samples
+            
+            # 如果测试集比例过大，调整为合适的值
+            if test_size > max_test_size:
+                adjusted_test_size = max_test_size
+                print(f"调整测试集比例从 {test_size:.1%} 到 {adjusted_test_size:.1%} 以确保每个类别在测试集中至少有一个样本")
+                test_size = adjusted_test_size
+                train_size = 1 - test_size
+            use_stratify = True
+        
+        # 计算最终的train_size
         train_size = 1 - test_size
+        
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-            X, y, test_size=test_size, train_size=train_size, random_state=42, stratify=y
+            X, y, test_size=test_size, train_size=train_size, random_state=42, stratify=y if use_stratify else None
         )
         
         print(f"特征提取完成，特征维度: {X.shape[1]}")
