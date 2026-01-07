@@ -1,0 +1,45 @@
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 结果文件
+results/
+../results/
+*_results/
+
+# 模型文件
+models/
+../models/
+*.pkl
+*.npz
+
+# 日志文件
+*.log
+logs/
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 数据文件（如果需要上传数据，可删除此行）
+data/
+../data/
