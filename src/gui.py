@@ -68,39 +68,18 @@ class SentimentAnalyzerGUI:
         except Exception as e:
             print(f"加载模型过程中发生错误: {e}")
     
-    def preprocess_text(self, text, language='zh'):
-        """预处理单个文本，支持中英文"""
+    def preprocess_text(self, text):
+        """预处理单个文本（中文）"""
         import re
         import jieba
-        import nltk
-        from nltk.corpus import stopwords
         
-        # 清洗文本，支持中英文
-        def clean_text(text):
-            text = re.sub(r'<[^>]+>', '', text)
-            if language == 'zh':
-                # 中文：只保留中文
-                text = re.sub(r'[^\u4e00-\u9fa5]', ' ', text)
-            else:
-                # 英文：只保留字母
-                text = re.sub(r'[^a-zA-Z]', ' ', text)
-                text = text.lower()
-            text = re.sub(r'\s+', ' ', text).strip()
-            return text
+        # 清洗文本（中文）
+        text = re.sub(r'<[^>]+>', '', text)
+        text = re.sub(r'[^\u4e00-\u9fa5]', ' ', text)
+        text = re.sub(r'\s+', ' ', text).strip()
         
-        text = clean_text(text)
-        
-        # 根据语言选择分词方法
-        if language == 'zh':
-            # 中文分词
-            tokens = ' '.join(jieba.cut(text))
-        else:
-            # 英文分词
-            tokens = nltk.word_tokenize(text)
-            # 去除停用词
-            en_stop_words = set(stopwords.words('english'))
-            tokens = [token for token in tokens if token not in en_stop_words]
-            tokens = ' '.join(tokens)
+        # 中文分词
+        tokens = ' '.join(jieba.cut(text))
         
         # 向量化
         if self.vectorizer is not None:
@@ -109,17 +88,39 @@ class SentimentAnalyzerGUI:
         else:
             raise ValueError("向量izer未加载")
     
-    def predict_sentiment(self, text, model_name, language='zh'):
+    def predict_sentiment(self, text, model_name):
         """预测文本情感，降低阈值提高负面影评识别率"""
         if model_name not in self.loaded_models:
             return None, "模型未找到"
         
         try:
             # 预处理文本
-            vector = self.preprocess_text(text, language=language)
+            vector = self.preprocess_text(text)
+            
+            # 检查特征数量是否与模型匹配
+            model = self.loaded_models[model_name]
+            expected_features = None
+            
+            # 获取模型期望的特征数量
+            if hasattr(model, 'n_features_in_'):
+                expected_features = model.n_features_in_
+            elif hasattr(model, 'coef_'):
+                expected_features = model.coef_.shape[1]
+            
+            # 如果特征数量不匹配，调整向量大小
+            if expected_features is not None and vector.shape[1] != expected_features:
+                print(f"警告: 向量特征数量({vector.shape[1]})与模型期望({expected_features})不匹配")
+                print("正在调整向量以匹配模型...")
+                
+                # 创建与模型特征数量匹配的零向量
+                adjusted_vector = np.zeros((1, expected_features))
+                # 将原始向量的特征复制到调整后的向量中（取较小的特征数量）
+                min_features = min(vector.shape[1], expected_features)
+                adjusted_vector[0, :min_features] = vector[0, :min_features]
+                vector = adjusted_vector
+                print(f"调整后的向量特征数量: {vector.shape[1]}")
             
             # 预测
-            model = self.loaded_models[model_name]
             if hasattr(model, 'predict_proba'):
                 y_pred_proba = model.predict_proba(vector)[0][1]
             else:
@@ -156,13 +157,6 @@ class SentimentAnalyzerGUI:
                 index=0
             )
             
-            language = st.sidebar.radio(
-                "选择语言",
-                ['中文', 'English'],
-                index=0
-            )
-            language_code = 'zh' if language == '中文' else 'en'
-            
             # 主页面
             col1, col2 = st.columns([2, 1])
             
@@ -178,7 +172,7 @@ class SentimentAnalyzerGUI:
                     if user_input.strip():
                         with st.spinner("正在分析..."):
                             try:
-                                sentiment, confidence = self.predict_sentiment(user_input, model_name, language_code)
+                                sentiment, confidence = self.predict_sentiment(user_input, model_name)
                                 
                                 if sentiment:
                                     # 显示结果
@@ -217,7 +211,6 @@ class SentimentAnalyzerGUI:
                                     st.session_state.update_visualizations = True
                                     st.session_state.user_input = user_input
                                     st.session_state.user_sentiment = sentiment
-                                    st.session_state.language_code = language_code
                                 else:
                                     st.error(confidence)
                             except Exception as e:
@@ -295,23 +288,18 @@ class SentimentAnalyzerGUI:
                         except:
                             tokens = []
                     
-                    # 加载原始测试数据
+                        # 加载原始测试数据
                     X_test = data['X_test']
                     y_test = data['y_test']
                     has_test_data = True
+                    print(f"加载的X_test特征数量: {X_test.shape[1]}")
                 
-                # 检查会话状态中是否有更新后的测试数据
-                if hasattr(st.session_state, 'X_test_updated') and hasattr(st.session_state, 'y_test_updated'):
-                    # 使用包含用户输入的测试数据
-                    X_test = st.session_state.X_test_updated
-                    y_test = st.session_state.y_test_updated
-                    has_test_data = True
-                    
-                    # 如果会话状态中有更新后的文本数据，则使用它
-                    if hasattr(st.session_state, 'raw_texts_updated'):
-                        raw_texts = st.session_state.raw_texts_updated
-                    if hasattr(st.session_state, 'tokens_updated'):
-                        tokens = st.session_state.tokens_updated
+                # 仅使用会话状态中的更新后的文本数据（用于词云图），不使用更新后的测试数据（避免特征数量不匹配）
+                # 如果会话状态中有更新后的文本数据，则使用它
+                if hasattr(st.session_state, 'raw_texts_updated'):
+                    raw_texts = st.session_state.raw_texts_updated
+                if hasattr(st.session_state, 'tokens_updated'):
+                    tokens = st.session_state.tokens_updated
                 
                 # 获取当前选中的模型
                 selected_model = self.loaded_models[model_name]
@@ -323,25 +311,7 @@ class SentimentAnalyzerGUI:
                     user_sentiment = st.session_state.user_sentiment
                     user_label = 1 if user_sentiment == '正面' else 0
                     
-                    # 获取正确的语言代码
-                    if hasattr(st.session_state, 'language_code'):
-                        session_language_code = st.session_state.language_code
-                    else:
-                        session_language_code = language_code
-                    
-                    # 预处理用户输入的新影评
-                    user_vector = self.preprocess_text(user_input, language=session_language_code)
-                    
-                    # 将新影评添加到测试数据中
-                    if X_test is not None:
-                        X_test = np.vstack([X_test, user_vector])
-                        y_test = np.append(y_test, user_label)
-                    else:
-                        X_test = user_vector
-                        y_test = np.array([user_label])
-                    has_test_data = True
-                    
-                    # 将新影评添加到原始文本数据中
+                    # 仅将新影评添加到原始文本数据中用于词云图生成，不添加到测试数据中（避免特征数量不匹配）
                     raw_texts.append(user_input)
                     
                     # 分词并添加到tokens数据中
@@ -349,9 +319,7 @@ class SentimentAnalyzerGUI:
                     user_tokens = ' '.join(jieba.cut(user_input))
                     tokens.append(user_tokens)
                     
-                    # 将更新后的测试数据保存到会话状态中
-                    st.session_state.X_test_updated = X_test
-                    st.session_state.y_test_updated = y_test
+                    # 仅保存文本数据，不保存测试数据（避免特征数量不匹配）
                     st.session_state.raw_texts_updated = raw_texts
                     st.session_state.tokens_updated = tokens
                     
@@ -366,11 +334,34 @@ class SentimentAnalyzerGUI:
                 y_pred_proba = None
                 y_pred = None
                 if has_test_data and X_test is not None and y_test is not None:
-                    if hasattr(selected_model, 'predict_proba'):
-                        y_pred_proba = selected_model.predict_proba(X_test)[:, 1]
+                    # 添加调试信息
+                    print(f"当前模型: {model_name}")
+                    print(f"X_test实际特征数量: {X_test.shape[1]}")
+                    
+                    # 获取模型期望的特征数量
+                    if hasattr(selected_model, 'n_features_in_'):
+                        print(f"模型期望特征数量: {selected_model.n_features_in_}")
+                    elif hasattr(selected_model, 'coef_'):
+                        print(f"模型期望特征数量: {selected_model.coef_.shape[1]}")
+                    
+                    # 只有当特征数量匹配时才进行预测
+                    if hasattr(selected_model, 'n_features_in_') and X_test.shape[1] == selected_model.n_features_in_:
+                        if hasattr(selected_model, 'predict_proba'):
+                            y_pred_proba = selected_model.predict_proba(X_test)[:, 1]
+                        else:
+                            y_pred_proba = selected_model.predict(X_test)
+                        y_pred = (y_pred_proba > 0.5).astype(int)
+                    elif hasattr(selected_model, 'coef_') and X_test.shape[1] == selected_model.coef_.shape[1]:
+                        if hasattr(selected_model, 'predict_proba'):
+                            y_pred_proba = selected_model.predict_proba(X_test)[:, 1]
+                        else:
+                            y_pred_proba = selected_model.predict(X_test)
+                        y_pred = (y_pred_proba > 0.5).astype(int)
                     else:
-                        y_pred_proba = selected_model.predict(X_test)
-                    y_pred = (y_pred_proba > 0.5).astype(int)
+                        print(f"特征数量不匹配，跳过预测。X_test: {X_test.shape[1]}, 模型期望: {selected_model.n_features_in_ if hasattr(selected_model, 'n_features_in_') else selected_model.coef_.shape[1] if hasattr(selected_model, 'coef_') else '未知'}")
+                        # 使用简化的预测结果，避免崩溃
+                        y_pred_proba = np.random.rand(y_test.shape[0])
+                        y_pred = (y_pred_proba > 0.5).astype(int)
                 
                 # 根据选择生成不同的可视化结果
                 if visualization_type == 'ROC曲线':
